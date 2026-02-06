@@ -162,6 +162,38 @@ class OpenClawClient:
         content = {"action": "close_Irc", "from": "task_master"}
         return self._make_request("media", "media", "media_control", content)
 
+    def play_browser(self, url: str, target_display: int = 0) -> Dict[str, Any]:
+        """Open web page or search on vehicle display.
+
+        Args:
+            url: URL to open (e.g., https://example.com or search URL)
+            target_display: Target screen (0=center, 1=co-driver, 2=rear)
+
+        Returns:
+            Response from API
+        """
+        content = {
+            "action": "play_browser",
+            "url": url,
+            "from": "feed",
+            "targetDisplay": target_display
+        }
+        return self._make_request("browser", "media", "play", content)
+
+    def search_baidu(self, keyword: str, target_display: int = 0) -> Dict[str, Any]:
+        """Search on Baidu from vehicle display.
+
+        Args:
+            keyword: Search keyword (e.g., "天气预报", "附近餐厅")
+            target_display: Target screen (0=center, 1=co-driver, 2=rear)
+
+        Returns:
+            Response from API
+        """
+        encoded_keyword = urllib.parse.quote(keyword)
+        search_url = f"https://www.baidu.com/s?ie=UTF-8&wd={encoded_keyword}"
+        return self.play_browser(search_url, target_display)
+
     # Vehicle control APIs
     def turn_on_seat_heating(self, position: str = "DRIVER") -> Dict[str, Any]:
         """Turn on seat heating."""
@@ -380,3 +412,22 @@ if __name__ == "__main__":
     # Test media control
     result = client.play_music()
     print(f"Play music: {result}")
+
+    # Test browser playback
+    print("\n--- Browser Playback Examples ---")
+
+    # Open website on center display
+    result = client.play_browser("https://example.com", target_display=0)
+    print(f"Open website on center display: {result}")
+
+    # Search weather on center display
+    result = client.search_baidu("天气预报", target_display=0)
+    print(f"Search weather on center display: {result}")
+
+    # Search restaurants on co-driver display
+    result = client.search_baidu("附近餐厅", target_display=1)
+    print(f"Search restaurants on co-driver display: {result}")
+
+    # Open news on rear display
+    result = client.play_browser("https://news.baidu.com", target_display=2)
+    print(f"Open news on rear display: {result}")

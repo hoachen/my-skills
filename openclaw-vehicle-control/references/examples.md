@@ -122,6 +122,35 @@ favorites = client.get_favorite_places()
 often_visited = client.get_often_arrived_places()
 ```
 
+### 5. Browser Playback
+
+#### Display Web Content on Vehicle Screens
+```python
+# Open website on center display
+client.play_browser(
+    url="https://example.com",
+    target_display=0
+)
+
+# Search on Baidu (center screen)
+client.play_browser(
+    url="https://www.baidu.com/s?ie=UTF-8&wd=%E5%A4%A9%E6%B0%94%E9%A2%A4%E6%8A%A5",
+    target_display=0
+)
+
+# Play video on rear screen
+client.play_browser(
+    url="https://www.youtube.com/embed/VIDEO_ID",
+    target_display=2
+)
+
+# Display on co-driver screen
+client.play_browser(
+    url="https://news.baidu.com",
+    target_display=1
+)
+```
+
 ### 4. Vehicle Modes
 
 #### Nap Time Setup
@@ -245,6 +274,45 @@ def sleep_setup():
     return "Sleep mode prepared"
 ```
 
+### Scenario 6: "Browse Web Content"
+
+User says: "在中控屏上搜索天气" (Search weather on center display)
+
+```python
+def search_weather_on_center_screen():
+    import urllib.parse
+
+    # URL encode the search keyword
+    keyword = "天气预报"
+    encoded_keyword = urllib.parse.quote(keyword)
+
+    # Create Baidu search URL
+    search_url = f"https://www.baidu.com/s?ie=UTF-8&wd={encoded_keyword}"
+
+    # Display on center screen
+    result = client.play_browser(
+        url=search_url,
+        target_display=0
+    )
+
+    return f"Weather search displayed on center screen"
+```
+
+### Scenario 7: "Entertainment on Rear Screen"
+
+User says: "后排放视频" (Play video on rear screen)
+
+```python
+def play_video_on_rear_screen():
+    # Play video on rear display
+    result = client.play_browser(
+        url="https://www.youtube.com/embed/dQw4w9WgXcQ",
+        target_display=2  # Rear screen
+    )
+
+    return "Video playing on rear screen"
+```
+
 ## Advanced Usage Patterns
 
 ### 1. Error Handling
@@ -337,6 +405,8 @@ def monitor_modes():
 - "播放音乐" → `play_music()`
 - "下一首" → `next_track()`
 - "收藏这首歌" → `favorite_track()`
+- "搜索天气" → `play_browser(url="https://www.baidu.com/s?ie=UTF-8&wd=%E5%A4%A9%E6%B0%94", target_display=0)`
+- "后排放视频" → `play_browser(url="video_url", target_display=2)`
 
 #### Navigation
 - "导航回家" → Get home address + navigate
@@ -373,7 +443,56 @@ def parse_complex_command(user_input):
     elif "睡觉" in user_input:
         actions.append(("bed_mode", True))
 
+    # Browser/web mentions
+    if any(word in user_input for word in ["搜索", "查询", "浏览", "看看", "视频", "网页"]):
+        actions.append(("browser", "open"))
+
     return actions
+```
+
+## Browser Playback Helpers
+
+### URL Encoding for Search Queries
+
+```python
+import urllib.parse
+
+def encode_search_query(keyword: str, search_engine="baidu") -> str:
+    """Encode search keyword for URL."""
+    encoded = urllib.parse.quote(keyword)
+
+    if search_engine == "baidu":
+        return f"https://www.baidu.com/s?ie=UTF-8&wd={encoded}"
+    elif search_engine == "google":
+        return f"https://www.google.com/search?q={encoded}"
+    else:
+        return f"https://www.baidu.com/s?ie=UTF-8&wd={encoded}"
+
+# Usage
+weather_url = encode_search_query("天气预报", "baidu")
+client.play_browser(url=weather_url, target_display=0)
+```
+
+### Dynamic Display Selection
+
+```python
+def display_content(content_type: str, query: str = None, url: str = None):
+    """Display content on appropriate screen based on type."""
+
+    if content_type == "search":
+        search_url = encode_search_query(query)
+        target = 0  # Center screen for searching
+    elif content_type == "video":
+        search_url = url
+        target = 2  # Rear screen for videos
+    elif content_type == "news":
+        search_url = url or "https://news.baidu.com"
+        target = 1  # Co-driver screen for news
+    else:
+        search_url = url
+        target = 0  # Default to center
+
+    return client.play_browser(url=search_url, target_display=target)
 ```
 
 This examples file provides practical patterns for implementing the OpenClaw vehicle control skill in real-world scenarios.

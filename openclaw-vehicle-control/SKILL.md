@@ -21,7 +21,7 @@ Control vehicle systems through natural language using the OpenClaw API service 
 - Music playback control (play, pause, next, previous)
 - Track favoriting and management
 - Lyrics display on multiple screens
-- Browser content playback with URL support
+- Browser content playback (open web pages, search on Baidu)
 - Volume adjustment (0-100)
 - Multi-screen target support (dashboard, co-driver, rear)
 
@@ -95,6 +95,8 @@ client.enable_nap_mode(duration_minutes=30)
 - "开车准备" → Check battery + open map + set AC + adjust volume
 - "打开阅读灯" → Turn on all reading lights or specific position lights
 - "关闭所有灯" → Turn off all interior and reading lights
+- "在中控屏上搜索天气预报" → Browser playback with Baidu search on center display
+- "后排放视频" → Browser playback on rear screen with video URL
 
 #### Scenario Commands
 - "放松模式" → Nap mode + massage + ambient light + soft music + comfortable temp

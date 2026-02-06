@@ -41,9 +41,12 @@ All media commands use: `media` → `media` → `media_control` with action para
 - **Lyrics control**: `action: "open_Irc"` / `action: "close_Irc"` (requires `target_area`: 0/1/2)
 
 #### Browser Media
-Browser playback control: `browser` → `media` → `play`
+Browser content display: `browser` → `media` → `play`
 
-- **Play browser content**: `action: "play_browser"` + `url` + `targetDisplay` (0/1/2)
+- **Open web pages**: `action: "play_browser"` + `url` + `targetDisplay` (0/1/2)
+  - Open any web URL (e.g., https://example.com)
+  - Perform searches (e.g., https://www.baidu.com/s?ie=UTF-8&wd=ENCODED_KEYWORD)
+  - Automatically handles URL encoding for search keywords
 
 ### Vehicle Control Commands
 
@@ -187,6 +190,16 @@ Mode status query: `vehicle` → `CarXmodePlugin` → `carXmode/getValue` or `re
 }
 ```
 
+### Browser Playback Operations
+```json
+{
+  "action": "play_browser",
+  "url": "https://www.baidu.com/s?ie=UTF-8&wd=ENCODED_KEYWORD",
+  "from": "feed",
+  "targetDisplay": 0
+}
+```
+
 ## Common Parameters
 
 ### Positions
@@ -205,7 +218,7 @@ Mode status query: `vehicle` → `CarXmodePlugin` → `carXmode/getValue` or `re
 - **White Noise Type**: 0-7 (different ambient sound options)
 
 ### Display Targets
-- `0` - Center display (dashboard)
+- `0` - Center display (dashboard / 中控屏幕)
 - `1` - Co-driver display (副驾屏幕)
 - `2` - Rear display (后排屏幕)
 
@@ -263,12 +276,184 @@ Mode status query: `vehicle` → `CarXmodePlugin` → `carXmode/getValue` or `re
 - `media` - Media playback control
 - Navigation category: `media` (for browser playback)
 
+## Detailed API Specifications
+
+### Get Often Arrived Locations (常去地址)
+
+**Endpoint**: `navi` → `LbsAddressPlugin` → `getOftenArrivedPoi`
+
+**Request**:
+```json
+{
+  "domain": "LbsAddressPlugin",
+  "command": "getOftenArrivedPoi",
+  "content": {}
+}
+```
+
+**Response Structure**:
+```json
+{
+  "async": 0,
+  "asyncTaskID": 0,
+  "dataJson": "[{POI_OBJECT}, ...]",
+  "id": 20,
+  "state": 0,
+  "surfaceViewId": 1,
+  "taskId": 0,
+  "type": 3
+}
+```
+
+**POI Object Fields**:
+- `name` (string): Location name
+- `address` (string): Street address
+- `lat` (number): Latitude coordinate
+- `lon` (number): Longitude coordinate
+- `poiId` (string): Unique POI identifier
+- `typeCode` (string): Location type code
+- `customType` (number): Custom type classification
+- `accuracy` (number): GPS accuracy in meters
+- `altitude` (number): Elevation in meters
+- `bearing` (number): Direction/bearing value
+- `speed` (number): Speed at location
+- `adcode` (number): Administrative area code
+- `opSource` (number): Operation source identifier
+- `routePrefer` (number): Route preference setting
+- `detailInfo.distance` (number): Distance information
+- `chargeStationInaccessible` (boolean): Charging station accessibility flag
+
+**Example cURL**:
+```bash
+curl "http://localhost:53535/navi?domain=LbsAddressPlugin&command=getOftenArrivedPoi&content=%7B%7D"
+```
+
+## Browser Playback Detailed Specification
+
+### Overview
+Browser content display allows opening web pages and performing searches (Baidu/Google) on vehicle displays with automatic URL encoding support.
+
+### Endpoint
+- **Category**: `browser`
+- **Domain**: `media`
+- **Command**: `play`
+- **Action**: `play_browser`
+
+### Request Format
+```json
+{
+  "action": "play_browser",
+  "url": "https://example.com",
+  "from": "feed",
+  "targetDisplay": 0
+}
+```
+
+### Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `action` | string | Yes | Must be `"play_browser"` |
+| `url` | string | Yes | Full URL or search URL with URL-encoded keywords |
+| `from` | string | No | Source identifier (e.g., "feed") |
+| `targetDisplay` | number | Yes | Target screen: 0 (center), 1 (co-driver), 2 (rear) |
+
+### URL Format Patterns
+
+#### Direct Web URLs
+```
+https://example.com
+https://www.baidu.com
+https://www.youtube.com/watch?v=VIDEO_ID
+```
+
+#### Baidu Search URLs
+```
+https://www.baidu.com/s?ie=UTF-8&wd=ENCODED_KEYWORD
+```
+
+Where `ENCODED_KEYWORD` is URL-encoded using UTF-8.
+
+**Example**: Search for "天气预报" (weather forecast)
+- Raw keyword: `天气预报`
+- URL encoded: `%E5%A4%A9%E6%B0%94%E9%A2%A4%E6%8A%A5`
+- Full URL: `https://www.baidu.com/s?ie=UTF-8&wd=%E5%A4%A9%E6%B0%94%E9%A2%A4%E6%8A%A5`
+
+### URL Encoding Reference
+- Chinese character "天" → `%E5%A4%A9`
+- Chinese character "气" → `%E6%B0%94`
+- Chinese character "预" → `%E9%A2%A4`
+- Chinese character "报" → `%E6%8A%A5`
+
+### Display Target Reference
+| Value | Screen | Location | Chinese |
+|-------|--------|----------|---------|
+| 0 | Center Display | Driver/Primary | 中控屏幕 |
+| 1 | Co-driver Display | Passenger side | 副驾屏幕 |
+| 2 | Rear Display | Back seats | 后排屏幕 |
+
+### Example Requests
+
+**Example 1: Play website on center screen**
+```json
+{
+  "action": "play_browser",
+  "url": "https://example.com",
+  "from": "feed",
+  "targetDisplay": 0
+}
+```
+
+**Example 2: Search weather on center screen**
+```json
+{
+  "action": "play_browser",
+  "url": "https://www.baidu.com/s?ie=UTF-8&wd=%E5%A4%A9%E6%B0%94%E9%A2%A4%E6%8A%A5",
+  "from": "feed",
+  "targetDisplay": 0
+}
+```
+
+**Example 3: Play video on rear screen**
+```json
+{
+  "action": "play_browser",
+  "url": "https://www.youtube.com/embed/VIDEO_ID",
+  "from": "feed",
+  "targetDisplay": 2
+}
+```
+
+### Response Format
+```json
+{
+  "status": true,
+  "message": "Executed",
+  "data": "Browser content loaded"
+}
+```
+
+### Common Use Cases
+- **Web Search**: Search on Baidu or Google (e.g., "天气预报", "附近餐厅")
+- **Open Websites**: Open any web page (news, maps, etc.)
+- **Information Queries**: Search for real-time information
+- **Navigation Assistance**: Open maps or location-based URLs
+
+### Error Handling
+- Invalid URL format → Returns 400 Bad Request
+- Unsupported protocol → Returns 400 Bad Request
+- Invalid targetDisplay value → Returns 400 Bad Request
+- Network timeout → Returns 500 Internal Server Error
+
+---
+
 ## API Endpoints Summary
 
 | Category | Domain | Command | Operation |
 |----------|--------|---------|-----------|
 | navi | LbsProtocolPlugin | requestAsync | Navigate to destination |
 | navi | LbsAddressPlugin | getCurrentLocation/getHomeInfo | Location queries |
+| navi | LbsAddressPlugin | getOftenArrivedPoi | Get frequently visited locations |
 | navi | LbsMapPlugin | openApp/closeApp/zoomIn/zoomOut | Map control |
 | media | media | media_control | Playback with action param |
 | browser | media | play | Browser content display |
