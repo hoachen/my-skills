@@ -38,6 +38,7 @@ client.set_ac_switch(True)
 client.set_ac_temperature(22)
 client.set_ambient_light(True)
 client.set_perfume(True)
+client.turn_on_seat_massage("DRIVER")
 ```
 
 #### Summer Cooling Setup
@@ -47,25 +48,78 @@ client.set_max_cooling(True)
 client.turn_on_seat_ventilation("DRIVER")
 client.set_ac_fan_speed(7)
 client.set_ac_temperature(18)
+client.open_sunshade()
+```
+
+#### Lighting Controls
+```python
+# Turn on all reading lights
+client.turn_on_all_reading_lights()
+
+# Turn on specific row lights
+client.turn_on_reading_light("row1_left")
+client.turn_on_reading_light("row2_right")
+
+# Control ring lamp and external lights
+client.turn_on_ring_lamp()
+client.set_external_lights(True)
+```
+
+#### Advanced Features
+```python
+# Adjust volume
+client.set_volume(50)
+
+# Get battery level
+battery = client.get_battery_level()
+
+# Get energy mode
+energy_mode = client.get_energy_mode()
 ```
 
 ### 3. Navigation Tasks
 
-#### Navigate Home
+#### Navigate to Destination
 ```python
+# Navigate to a specific place
+result = client.navigate_to("天安门")  # Navigate to Tian'anmen
+if result.get('status'):
+    print("Navigation started")
+
 # Get home address first
 home = client.get_home_address()
 if home.get('status'):
-    # Extract coordinates and navigate
-    client.navigate_to("Home", lat, lon)
-    client.open_map()
+    client.navigate_to_home()
+
+# Navigate to company
+company = client.get_company_address()
+if company.get('status'):
+    client.navigate_to_company()
 ```
 
 #### Map Operations
 ```python
 client.open_map()
 client.zoom_in_map()
+client.zoom_out_map()
 client.back_to_car()
+client.back_to_base_scene()
+
+# Get map information
+car_pos = client.get_map_car_position()
+map_style = client.get_map_style()
+```
+
+#### Location Services
+```python
+# Get current location
+current = client.get_current_location()
+
+# Get favorite places
+favorites = client.get_favorite_places()
+
+# Get frequently visited places
+often_visited = client.get_often_arrived_places()
 ```
 
 ### 4. Vehicle Modes
